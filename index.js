@@ -45,13 +45,8 @@ bot.on("message", (msg) => {
   if (text === "senha") {
     bot.sendPhoto(
       chatId,
-      `${URL}/assets/alice.png`,
+      path.join(__dirname, "assets", "alice.png"),
       { caption: "Aqui está a sua solicitação." }
-    );
-  } else {
-    bot.sendMessage(
-      msg.chat.id,
-      "Solicitação Não Reconhecida!"
     );
   }
 });
