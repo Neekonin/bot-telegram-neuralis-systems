@@ -45,7 +45,7 @@ bot.on("message", (msg) => {
   if (text === "senha") {
     bot.sendPhoto(
       chatId,
-      `${URL}/alice.png`,
+      `${URL}/assets/alice.png`,
       { caption: "Aqui está a sua solicitação." }
     );
   } else {
