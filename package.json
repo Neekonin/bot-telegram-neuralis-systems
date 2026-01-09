@@ -1,16 +1,19 @@
 {
-  "name": "telegram-bot-render",
+  "name": "orion-neuralis-bot",
   "version": "1.0.0",
-  "description": "Bot do Telegram rodando na Render via webhook",
+  "description": "Bot narrativo ARG com reconhecimento de imagens e IA personagem (Orion) criado pela Neuralis Systems.",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=18.0.0"
   },
   "dependencies": {
+    "axios": "^1.6.7",
     "express": "^4.19.2",
-    "node-telegram-bot-api": "^0.66.0"
+    "image-hash": "^5.3.2",
+    "node-telegram-bot-api": "^0.66.0",
+    "openai": "^4.28.0"
   }
 }
