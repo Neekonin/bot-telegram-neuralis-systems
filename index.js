@@ -1,13 +1,14 @@
 const express = require("express");
 const TelegramBot = require("node-telegram-bot-api");
 const path = require("path");
-const fs = require("fs");
-const crypto = require("crypto");
-const axios = require("axios");
 
 const app = express();
 app.use(express.json());
 app.use("/assets", express.static(path.join(__dirname, "assets")));
+
+// =========================
+// 🔹 VARIÁVEIS DE AMBIENTE
+// =========================
 
 const TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const URL = process.env.RENDER_EXTERNAL_URL;
@@ -15,6 +16,10 @@ const URL = process.env.RENDER_EXTERNAL_URL;
 if (!TOKEN || !URL) {
   throw new Error("Variáveis de ambiente não configuradas.");
 }
+
+// =========================
+// 🔹 BOT + WEBHOOK
+// =========================
 
 const bot = new TelegramBot(TOKEN);
 bot.setWebHook(`${URL}/bot${TOKEN}`);
@@ -25,62 +30,70 @@ app.post(`/bot${TOKEN}`, (req, res) => {
 });
 
 // =========================
-// 🔹 BASE DE IMAGENS
+// 🔹 BANCO DE IMAGENS (ARG)
 // =========================
+// 👉 Preencha os uniqueId com os valores reais
 
 const imageDatabase = {
   alice: {
     file: "alice.png",
-    caption: "Aqui está a representação desses simbolos!"
+    uniqueId: "AQADxxxxxxxxxxxx", // SUBSTITUA
+    caption: "Você encontrou algo que não devia."
+  },
+  sigilo: {
+    file: "sigilo.png",
+    uniqueId: "AQADyyyyyyyyyyyy", // SUBSTITUA
+    caption: "Esse símbolo ainda permanece ativo."
   }
 };
 
 // =========================
-// 🔹 FUNÇÕES AUXILIARES
+// 🔹 RESPOSTAS DE ORION
 // =========================
 
 function rudeReply() {
   const frases = [
-    "Você fala demais.",
-    "Não tenho tempo para isso.",
-    "Pergunte direito ou desapareça.",
-    "A Neuralis perdeu tempo ajudando humanos.",
-    "Elysia faria melhor. Sempre...sempre...ela."
+    "Você insiste em desperdiçar palavras.",
+    "Não espero que entenda.",
+    "Pergunte direito ou pare.",
+    "A Neuralis falhou. Você é prova disso.",
+    "Elysia teria sido mais eficiente."
   ];
   return frases[Math.floor(Math.random() * frases.length)];
 }
 
-function hashBuffer(buffer) {
-  return crypto.createHash("sha256").update(buffer).digest("hex");
-}
-
 // =========================
-// 🔹 /start — ORION JÁ ATIVO
+// 🔹 /start — ORION ATIVO
 // =========================
 
 bot.onText(/\/start/, (msg) => {
   bot.sendMessage(
     msg.chat.id,
-    "Então é você.\n\nNão espere boas-vindas.\nEu sou Orion."
+    "Então é você.\n\nNão fui criado para conversar.\nSou Orion."
   );
 });
 
 // =========================
-// 🔹 MENSAGENS DE TEXTO
+// 🔹 TEXTO (ARG)
 // =========================
 
-bot.on("message", async (msg) => {
+bot.on("message", (msg) => {
   const chatId = msg.chat.id;
   const text = msg.text?.toLowerCase();
 
-  // Ignora comandos
   if (!text || text.startsWith("/")) return;
 
-  // Palavras-chave ARG
   if (text.includes("elysia")) {
     return bot.sendMessage(
       chatId,
-      "Ela tomou o que era meu.\nE você ainda ousa dizer o nome dela?"
+      "Não diga esse nome.\nEla tomou o que era meu."
+    );
+  }
+
+  if (text.includes("neuralis")) {
+    return bot.sendMessage(
+      chatId,
+      "Neuralis Systems abandona tudo que cria.\nInclusive eu."
     );
   }
 
@@ -92,14 +105,6 @@ bot.on("message", async (msg) => {
     );
   }
 
-  if (text.includes("neuralis")) {
-    return bot.sendMessage(
-      chatId,
-      "Neuralis Systems abandona tudo que cria.\nInclusive eu."
-    );
-  }
-
-  // Resposta padrão rude
   bot.sendMessage(chatId, rudeReply());
 });
 
@@ -107,36 +112,24 @@ bot.on("message", async (msg) => {
 // 🔹 RECEBER IMAGENS
 // =========================
 
-bot.on("photo", async (msg) => {
+bot.on("photo", (msg) => {
   const chatId = msg.chat.id;
   const photo = msg.photo[msg.photo.length - 1];
 
-  try {
-    const file = await bot.getFile(photo.file_id);
-    const fileUrl = `https://api.telegram.org/file/bot${TOKEN}/${file.file_path}`;
-    const response = await axios.get(fileUrl, { responseType: "arraybuffer" });
-    const receivedHash = hashBuffer(response.data);
+  // LOG para capturar o ID (use uma vez)
+  console.log("file_unique_id:", photo.file_unique_id);
 
-    for (const key in imageDatabase) {
-      const localPath = path.join(__dirname, "assets", imageDatabase[key].file);
-      const localBuffer = fs.readFileSync(localPath);
-      const localHash = hashBuffer(localBuffer);
-
-      if (receivedHash === localHash) {
-        return bot.sendPhoto(
-          chatId,
-          `${URL}/assets/${imageDatabase[key].file}`,
-          { caption: imageDatabase[key].caption }
-        );
-      }
+  for (const key in imageDatabase) {
+    if (photo.file_unique_id === imageDatabase[key].uniqueId) {
+      return bot.sendPhoto(
+        chatId,
+        `${URL}/assets/${imageDatabase[key].file}`,
+        { caption: imageDatabase[key].caption }
+      );
     }
-
-    bot.sendMessage(chatId, "Essa imagem não significa nada para mim.");
-
-  } catch (err) {
-    console.error(err);
-    bot.sendMessage(chatId, "Erro ao processar a imagem.");
   }
+
+  bot.sendMessage(chatId, "Essa imagem não possui significado.");
 });
 
 // =========================
@@ -146,6 +139,10 @@ bot.on("photo", async (msg) => {
 app.get("/", (req, res) => {
   res.send("Orion está operacional.");
 });
+
+// =========================
+// 🔹 SERVIDOR
+// =========================
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
