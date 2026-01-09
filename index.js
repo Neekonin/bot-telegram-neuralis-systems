@@ -37,13 +37,8 @@ app.post(`/bot${TOKEN}`, (req, res) => {
 const imageDatabase = {
   alice: {
     file: "alice.png",
-    uniqueId: "AQADxxxxxxxxxxxx", // SUBSTITUA
+    uniqueId: "AQADagtrG5tyCUd-",
     caption: "Você encontrou algo que não devia."
-  },
-  sigilo: {
-    file: "sigilo.png",
-    uniqueId: "AQADyyyyyyyyyyyy", // SUBSTITUA
-    caption: "Esse símbolo ainda permanece ativo."
   }
 };
 
