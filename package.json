@@ -1,7 +1,7 @@
 {
   "name": "orion-neuralis-bot",
   "version": "1.0.0",
-  "description": "Bot narrativo ARG com reconhecimento de imagens e IA personagem (Orion) criado pela Neuralis Systems.",
+  "description": "Bot ARG narrativo com pseudo-IA (Orion), respostas baseadas em regras e reconhecimento de imagens. Criado pela Neuralis Systems.",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
@@ -12,8 +12,6 @@
   "dependencies": {
     "axios": "^1.6.7",
     "express": "^4.19.2",
-    "image-hash": "^5.3.2",
-    "node-telegram-bot-api": "^0.66.0",
-    "openai": "^4.28.0"
+    "node-telegram-bot-api": "^0.66.0"
   }
 }
