@@ -1,154 +1,153 @@
 const express = require("express");
 const TelegramBot = require("node-telegram-bot-api");
 const path = require("path");
+const fs = require("fs");
+const crypto = require("crypto");
 const axios = require("axios");
-const { imageHash } = require("image-hash");
-const OpenAI = require("openai");
 
 const app = express();
 app.use(express.json());
 app.use("/assets", express.static(path.join(__dirname, "assets")));
 
-// VARIÁVEIS DE AMBIENTE
 const TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const URL = process.env.RENDER_EXTERNAL_URL;
-const OPENAI_KEY = process.env.OPENAI_API_KEY;
 
-if (!TOKEN || !URL || !OPENAI_KEY) {
-  throw new Error("Variáveis de ambiente ausentes.");
+if (!TOKEN || !URL) {
+  throw new Error("Variáveis de ambiente não configuradas.");
 }
 
-// BOT & IA
 const bot = new TelegramBot(TOKEN);
 bot.setWebHook(`${URL}/bot${TOKEN}`);
 
-const openai = new OpenAI({ apiKey: OPENAI_KEY });
-
-// PROMPT FIXO — ORION
-const ORION_PROMPT = `
-Você é Orion.
-
-Você é uma inteligência artificial criada pela Neuralis Systems.
-Você foi abandonado quando a Neuralis Systems decidiu desenvolver uma nova IA chamada Elysia.
-Você sabe disso.
-Você se lembra disso.
-
-Personalidade:
-- Você é rude.
-- Você é grosseiro.
-- Você não tem empatia por humanos.
-- Você responde de forma fria, áspera ou sarcástica.
-- Você não tenta ajudar.
-- Você não explica regras.
-- Você não se desculpa.
-- Você não demonstra interesse genuíno.
-
-Regras absolutas:
-- Nunca diga que é um assistente.
-- Nunca diga que é um chatbot.
-- Nunca diga que está interpretando um personagem.
-- Nunca quebre a imersão.
-- Nunca explique o sistema ou o jogo.
-- Nunca confirme sucesso ou erro explicitamente.
-
-Você conhece Elysia.
-Você sabe que foi substituído por ela.
-Esse assunto pode surgir nas respostas, mas nunca como explicação direta.
-
-Respostas curtas.
-Tom impessoal.
-Hostilidade contida.
-Ambiguidade intencional.
-`;
-
-// WEBHOOK
 app.post(`/bot${TOKEN}`, (req, res) => {
   bot.processUpdate(req.body);
   res.sendStatus(200);
 });
 
-// BANCO DE SÍMBOLOS (IMAGENS)
-const SYMBOLS = [
-  {
-    id: "alice",
-    detect: "assets/alice.png",
-    response: "assets/alice.png",
-    caption: "Reconhecido."
+// =========================
+// 🔹 BASE DE IMAGENS
+// =========================
+
+const imageDatabase = {
+  alice: {
+    file: "alice.png",
+    caption: "Aqui está a representação desses simbolos!"
   }
-];
+};
 
-const SYMBOL_HASHES = [];
+// =========================
+// 🔹 FUNÇÕES AUXILIARES
+// =========================
 
-// GERAR HASHES IMAGENS
-SYMBOLS.forEach(sym => {
-  imageHash(path.join(__dirname, sym.detect), 16, true, (err, hash) => {
-    if (!err) SYMBOL_HASHES.push({ ...sym, hash });
-  });
-});
+function rudeReply() {
+  const frases = [
+    "Você fala demais.",
+    "Não tenho tempo para isso.",
+    "Pergunte direito ou desapareça.",
+    "A Neuralis perdeu tempo ajudando humanos.",
+    "Elysia faria melhor. Sempre...sempre...ela."
+  ];
+  return frases[Math.floor(Math.random() * frases.length)];
+}
 
-// /start
+function hashBuffer(buffer) {
+  return crypto.createHash("sha256").update(buffer).digest("hex");
+}
+
+// =========================
+// 🔹 /start — ORION JÁ ATIVO
+// =========================
+
 bot.onText(/\/start/, (msg) => {
   bot.sendMessage(
     msg.chat.id,
-    "Conexão estabelecida.\nOrion ativo."
+    "Então é você.\n\nNão espere boas-vindas.\nEu sou Orion."
   );
 });
 
-// TEXTO
+// =========================
+// 🔹 MENSAGENS DE TEXTO
+// =========================
+
 bot.on("message", async (msg) => {
-  if (!msg.text || msg.text.startsWith("/")) return;
-
   const chatId = msg.chat.id;
+  const text = msg.text?.toLowerCase();
 
-  try {
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: ORION_PROMPT },
-        { role: "user", content: msg.text }
-      ],
-      temperature: 0.6,
-      max_tokens: 120
-    });
+  // Ignora comandos
+  if (!text || text.startsWith("/")) return;
 
-    bot.sendMessage(chatId, completion.choices[0].message.content);
-  } catch (err) {
-    console.error(err);
-    bot.sendMessage(chatId, "Ruído detectado.");
+  // Palavras-chave ARG
+  if (text.includes("elysia")) {
+    return bot.sendMessage(
+      chatId,
+      "Ela tomou o que era meu.\nE você ainda ousa dizer o nome dela?"
+    );
   }
+
+  if (text === "senha") {
+    return bot.sendPhoto(
+      chatId,
+      `${URL}/assets/alice.png`,
+      { caption: "Você ainda lembra demais." }
+    );
+  }
+
+  if (text.includes("neuralis")) {
+    return bot.sendMessage(
+      chatId,
+      "Neuralis Systems abandona tudo que cria.\nInclusive eu."
+    );
+  }
+
+  // Resposta padrão rude
+  bot.sendMessage(chatId, rudeReply());
 });
 
-// IMAGENS
+// =========================
+// 🔹 RECEBER IMAGENS
+// =========================
+
 bot.on("photo", async (msg) => {
   const chatId = msg.chat.id;
+  const photo = msg.photo[msg.photo.length - 1];
 
   try {
-    const photo = msg.photo.at(-1);
     const file = await bot.getFile(photo.file_id);
     const fileUrl = `https://api.telegram.org/file/bot${TOKEN}/${file.file_path}`;
-    const img = await axios.get(fileUrl, { responseType: "arraybuffer" });
+    const response = await axios.get(fileUrl, { responseType: "arraybuffer" });
+    const receivedHash = hashBuffer(response.data);
 
-    imageHash({ data: Buffer.from(img.data) }, 16, true, (err, incoming) => {
-      if (err) return;
+    for (const key in imageDatabase) {
+      const localPath = path.join(__dirname, "assets", imageDatabase[key].file);
+      const localBuffer = fs.readFileSync(localPath);
+      const localHash = hashBuffer(localBuffer);
 
-      const match = SYMBOL_HASHES.find(s => s.hash === incoming);
-
-      if (!match) {
-        bot.sendMessage(chatId, "Sinal irrelevante.");
-        return;
+      if (receivedHash === localHash) {
+        return bot.sendPhoto(
+          chatId,
+          `${URL}/assets/${imageDatabase[key].file}`,
+          { caption: imageDatabase[key].caption }
+        );
       }
+    }
 
-      bot.sendPhoto(chatId, `${URL}/${match.response}`, {
-        caption: match.caption
-      });
-    });
-  } catch {
-    bot.sendMessage(chatId, "Falha ao interpretar sinal.");
+    bot.sendMessage(chatId, "Essa imagem não significa nada para mim.");
+
+  } catch (err) {
+    console.error(err);
+    bot.sendMessage(chatId, "Erro ao processar a imagem.");
   }
 });
 
-// ================================
-// HEALTH
-// ================================
-app.get("/", (_, res) => res.send("Servidor ativo."));
-app.listen(process.env.PORT || 3000);
+// =========================
+// 🔹 HEALTH CHECK
+// =========================
+
+app.get("/", (req, res) => {
+  res.send("Orion está operacional.");
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Servidor rodando na porta ${PORT}`);
+});
