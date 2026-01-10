@@ -36,7 +36,11 @@ app.post(`/bot${TOKEN}`, (req, res) => {
 const imageDatabase = {
   alice: {
     file: "alice.png",
-    uniqueId: "AQADagtrG5tyCUd-",
+    uniqueId: [
+        "AQADagtrG5tyCUd-",
+        "AQADjAtrG9KGEEd8",
+        "AgAD9gYAAtKGEEc"
+    ],
     caption: "Você encontrou algo que não devia."
   }
 };
@@ -106,7 +110,7 @@ function processImage(chatId, fileUniqueId) {
   console.log("Imagem recebida:", fileUniqueId);
 
   for (const key in imageDatabase) {
-    if (fileUniqueId === imageDatabase[key].uniqueId) {
+    if (imageDatabase[key].uniqueId.includes(fileUniqueId)) {
       return bot.sendPhoto(
         chatId,
         `${URL}/assets/${imageDatabase[key].file}`,
