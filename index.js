@@ -97,7 +97,7 @@ bot.on("message", (msg) => {
 
     bot.sendPhoto(
       chatId,
-      `${URL}/assets/neuroglyphs_key.png`,
+      `${URL}/assets/Neuroglyphs_key.png`,
       { caption: "Aqui está." }
     );
 
