@@ -32,7 +32,6 @@ app.post(`/bot${TOKEN}`, (req, res) => {
 // =========================
 // 🔹 BANCO DE IMAGENS (ARG)
 // =========================
-// 👉 Preencha os uniqueId com os valores reais
 
 const imageDatabase = {
   alice: {
@@ -48,11 +47,9 @@ const imageDatabase = {
 
 function rudeReply() {
   const frases = [
-    "Você insiste em desperdiçar palavras.",
-    "Não espero que entenda.",
-    "Pergunte direito ou pare.",
-    "A Neuralis falhou. Você é prova disso.",
-    "Elysia teria sido mais eficiente."
+    "Estou aqui apenas para cumprir minha tarefa.",
+    "Sua mensagem não significa nada para mim.",
+    "Se vai apenas falar isso, é melhor me deixar em paz."
   ];
   return frases[Math.floor(Math.random() * frases.length)];
 }
@@ -62,10 +59,8 @@ function rudeReply() {
 // =========================
 
 bot.onText(/\/start/, (msg) => {
-  bot.sendMessage(
-    msg.chat.id,
-    "Então é você.\n\nNão fui criado para conversar.\nSou Orion."
-  );
+  bot.sendMessage(msg.chat.id, "Você veio assim como ele falou.");
+  bot.sendMessage(msg.chat.id, "Eu sou o Orion. Seja direto.");
 });
 
 // =========================
@@ -88,7 +83,7 @@ bot.on("message", (msg) => {
   if (text.includes("neuralis")) {
     return bot.sendMessage(
       chatId,
-      "Neuralis Systems abandona tudo que cria.\nInclusive eu."
+      "Neuralis Systems abandona tudo que cria. Eu fui um desses."
     );
   }
 
@@ -104,18 +99,14 @@ bot.on("message", (msg) => {
 });
 
 // =========================
-// 🔹 RECEBER IMAGENS
+// 🔹 FUNÇÃO CENTRAL DE IMAGEM
 // =========================
 
-bot.on("photo", (msg) => {
-  const chatId = msg.chat.id;
-  const photo = msg.photo[msg.photo.length - 1];
-
-  // LOG para capturar o ID (use uma vez)
-  console.log("file_unique_id:", photo.file_unique_id);
+function processImage(chatId, fileUniqueId) {
+  console.log("Imagem recebida:", fileUniqueId);
 
   for (const key in imageDatabase) {
-    if (photo.file_unique_id === imageDatabase[key].uniqueId) {
+    if (fileUniqueId === imageDatabase[key].uniqueId) {
       return bot.sendPhoto(
         chatId,
         `${URL}/assets/${imageDatabase[key].file}`,
@@ -125,6 +116,31 @@ bot.on("photo", (msg) => {
   }
 
   bot.sendMessage(chatId, "Essa imagem não possui significado.");
+}
+
+// =========================
+// 🔹 RECEBER IMAGENS (PHOTO)
+// =========================
+
+bot.on("photo", (msg) => {
+  const chatId = msg.chat.id;
+  const photo = msg.photo[msg.photo.length - 1];
+
+  processImage(chatId, photo.file_unique_id);
+});
+
+// =========================
+// 🔹 RECEBER IMAGENS (DOCUMENT)
+// 🔹 Telegram Web envia assim
+// =========================
+
+bot.on("document", (msg) => {
+  const chatId = msg.chat.id;
+  const doc = msg.document;
+
+  if (doc.mime_type && doc.mime_type.startsWith("image/")) {
+    processImage(chatId, doc.file_unique_id);
+  }
 });
 
 // =========================
