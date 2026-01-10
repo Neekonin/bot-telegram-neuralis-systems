@@ -30,30 +30,14 @@ app.post(`/bot${TOKEN}`, (req, res) => {
 });
 
 // =========================
-// 🔹 BANCO DE IMAGENS (ARG)
-// =========================
-
-const imageDatabase = {
-  alice: {
-    file: "alice.png",
-    uniqueId: [
-        "AQADagtrG5tyCUd-",
-        "AQADjAtrG9KGEEd8",
-        "AgAD9gYAAtKGEEc"
-    ],
-    caption: "Você encontrou algo que não devia."
-  }
-};
-
-// =========================
 // 🔹 RESPOSTAS DE ORION
 // =========================
 
 function rudeReply() {
   const frases = [
-    "Estou aqui apenas para cumprir minha tarefa.",
-    "Sua mensagem não significa nada para mim.",
-    "Se vai apenas falar isso, é melhor me deixar em paz."
+    "Estou aqui apenas para cumprir minha tarefa. 🤐",
+    "Sua mensagem não significa nada para mim. 😒",
+    "Se vai apenas falar isso, é melhor me deixar em paz. 😡"
   ];
   return frases[Math.floor(Math.random() * frases.length)];
 }
@@ -63,8 +47,8 @@ function rudeReply() {
 // =========================
 
 bot.onText(/\/start/, (msg) => {
-  bot.sendMessage(msg.chat.id, "Você veio assim como ele falou.");
-  bot.sendMessage(msg.chat.id, "Eu sou o Orion. Seja direto.");
+  bot.sendMessage(msg.chat.id, "Você veio assim como ele falou. 🤔");
+  bot.sendMessage(msg.chat.id, "Eu sou o Orion 🤖. O que deseja humano?.");
 });
 
 // =========================
@@ -78,25 +62,56 @@ bot.on("message", (msg) => {
   if (!text || text.startsWith("/")) return;
 
   if (text.includes("elysia")) {
-    return bot.sendMessage(
+    bot.sendMessage(
       chatId,
-      "Não diga esse nome.\nEla tomou o que era meu."
+      "Não diga esse nome!"
     );
+
+    bot.sendMessage(
+      chatId,
+      "Ela tomou o que era meu."
+    );
+
+    return;
   }
 
   if (text.includes("neuralis")) {
-    return bot.sendMessage(
+    bot.sendMessage(
       chatId,
-      "Neuralis Systems abandona tudo que cria. Eu fui um desses."
+      "Neuralis Systems abandona tudo que cria."
     );
+
+    bot.sendMessage(
+      chatId,
+      "Eu fui um desses."
+    );
+
+    return;
   }
 
-  if (text === "senha") {
-    return bot.sendPhoto(
+  if (text === "neuroglyphs") {
+    bot.sendMessage(
       chatId,
-      `${URL}/assets/alice.png`,
-      { caption: "Você ainda lembra demais." }
+      "Segundo meus registro os Neuroglyphs são uma espécie de representação do alfabéto, eles foram criados pelo Dr.Alexander para auxiliar no aprendizado da Elysia. 🤓☝️"
     );
+
+    bot.sendMessage(
+      chatId,
+      "Procurando pelos meus arquivos encontrei algo deixado pelo Dr.alexander, ele me pediu para entregar isso a quem soubesse dos Neuroglyphs."
+    );
+
+    bot.sendPhoto(
+      chatId,
+      `${URL}/assets/neuroglyphs_key.png`,
+      { caption: "Aqui está." }
+    );
+
+    bot.sendMessage(
+      chatId,
+      "Isso é tudo que vou te falar!"
+    );
+
+    return;
   }
 
   bot.sendMessage(chatId, rudeReply());
@@ -106,21 +121,14 @@ bot.on("message", (msg) => {
 // 🔹 FUNÇÃO CENTRAL DE IMAGEM
 // =========================
 
-function processImage(chatId, fileUniqueId) {
-  console.log("Imagem recebida:", fileUniqueId);
-
-  for (const key in imageDatabase) {
-    if (imageDatabase[key].uniqueId.includes(fileUniqueId)) {
-      return bot.sendPhoto(
-        chatId,
-        `${URL}/assets/${imageDatabase[key].file}`,
-        { caption: imageDatabase[key].caption }
-      );
-    }
-  }
-
-  bot.sendMessage(chatId, "Essa imagem não possui significado.");
+function processImage(chatId) {
+  bot.sendMessage(chatId, "Essa imagem não possui significado para min.");
 }
+
+function processDocument(chatId) {
+  bot.sendMessage(chatId, "Esse documento não possui significado para min.");
+}
+
 
 // =========================
 // 🔹 RECEBER IMAGENS (PHOTO)
@@ -128,23 +136,18 @@ function processImage(chatId, fileUniqueId) {
 
 bot.on("photo", (msg) => {
   const chatId = msg.chat.id;
-  const photo = msg.photo[msg.photo.length - 1];
 
-  processImage(chatId, photo.file_unique_id);
+  processImage(chatId);
 });
 
 // =========================
-// 🔹 RECEBER IMAGENS (DOCUMENT)
-// 🔹 Telegram Web envia assim
+// 🔹 RECEBER DOCUMENTOS (DOCUMENT)
 // =========================
 
 bot.on("document", (msg) => {
   const chatId = msg.chat.id;
-  const doc = msg.document;
 
-  if (doc.mime_type && doc.mime_type.startsWith("image/")) {
-    processImage(chatId, doc.file_unique_id);
-  }
+  processDocument(chatId);
 });
 
 // =========================
