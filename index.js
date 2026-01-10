@@ -78,18 +78,13 @@ bot.on("message", (msg) => {
   if (text.includes("neuralis")) {
     bot.sendMessage(
       chatId,
-      "Neuralis Systems abandona tudo que cria."
-    );
-
-    bot.sendMessage(
-      chatId,
-      "Eu fui um desses."
+      "Neuralis Systems abandona tudo que cria. Eu fui um desses."
     );
 
     return;
   }
 
-  if (text === "neuroglyphs") {
+  if (text.includes("neuroglyphs")) {
     bot.sendMessage(
       chatId,
       "Segundo meus registro os Neuroglyphs são uma espécie de representação do alfabéto, eles foram criados pelo Dr.Alexander para auxiliar no aprendizado da Elysia. 🤓☝️"
@@ -128,7 +123,6 @@ function processImage(chatId) {
 function processDocument(chatId) {
   bot.sendMessage(chatId, "Esse documento não possui significado para min.");
 }
-
 
 // =========================
 // 🔹 RECEBER IMAGENS (PHOTO)
